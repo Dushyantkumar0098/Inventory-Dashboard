@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Inventory Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        /* Header Styling */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+
+        .header-logo h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .header-buttons {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-buttons button {
+            padding: 10px 15px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .header-buttons button:hover {
+            background-color: #c82333;
+        }
+
+        /* Filters Section */
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background-color: #f1f1f1;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .filters button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .filters button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .status-running {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-stopped {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Pagination Styling */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .pagination button {
+            padding: 10px 15px;
+            margin: 0 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .pagination button:hover {
+            background-color: #0056b3;
+        }
+
+        .pagination button.disabled {
+            background-color: #ddd;
+            color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            font-size: 14px;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-logo">
+            <img src="https://cdn-icons-png.flaticon.com/512/179/179386.png" alt="Logo">
+            <h1>AWS Inventory Dashboard</h1>
+        </div>
+        <div class="header-buttons">
+            <button id="signout-btn">Sign Out</button>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters">
+        <div>
+            <label for="region-filter">Filter by Region:</label>
+            <select id="region-filter">
+                <option value="all">All</option>
+                <option value="us-east-1">US East (N. Virginia)</option>
+                <option value="us-west-1">US West (N. California)</option>
+                <option value="eu-central-1">EU (Frankfurt)</option>
+            </select>
+        </div>
+        <div>
+            <label for="status-filter">Filter by Status:</label>
+            <select id="status-filter">
+                <option value="all">All</option>
+                <option value="running">Running</option>
+                <option value="stopped">Stopped</option>
+            </select>
+        </div>
+        <button id="apply-filters-btn">Apply Filters</button>
+        <button id="export-csv-btn">Export to CSV</button>
+    </div>
+
+    <!-- Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Instance ID</th>
+                <th>Instance Name</th>
+                <th>Type</th>
+                <th>Region</th>
+                <th>Status</th>
+                <th>Launch Date</th>
+            </tr>
+        </thead>
+        <tbody id="dashboard-table">
+            {% for instance in instances %}
+            <tr>
+                <td>
+                    <a href="/instance-metrics?id={{ instance.id }}&cpu={{ instance.cpu }}&memory={{ instance.memory }}" target="_blank">
+                        {{ instance.id }}
+                    </a>
+                </td>
+                <td>{{ instance.name }}</td>
+                <td>{{ instance.type }}</td>
+                <td>{{ instance.region }}</td>
+                <td class="{{ 'status-running' if instance.status == 'running' else 'status-stopped' }}">
+                    {{ instance.status }}
+                </td>
+                <td>{{ instance.launch_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination">
+        <button id="prev-page-btn" class="disabled">Previous</button>
+        <span id="current-page">Page 1</span>
+        <button id="next-page-btn">Next</button>
+    </div>
+
+    <script>
+        const signoutBtn = document.getElementById("signout-btn");
+        const regionFilter = document.getElementById("region-filter");
+        const statusFilter = document.getElementById("status-filter");
+        const applyFiltersBtn = document.getElementById("apply-filters-btn");
+        const exportCsvBtn = document.getElementById("export-csv-btn");
+        const tableBody = document.getElementById("dashboard-table");
+        const prevPageBtn = document.getElementById("prev-page-btn");
+        const nextPageBtn = document.getElementById("next-page-btn");
+        const currentPageSpan = document.getElementById("current-page");
+
+        const rowsPerPage = 10;
+        let currentPage = 1;
+
+        const inventoryData = Array.from({ length: 100 }, (_, i) => ({
+            id: `i-${String(i + 1).padStart(3, "0")}`,
+            name: `Instance-${i + 1}`,
+            type: i % 2 === 0 ? "t2.micro" : "t3.medium",
+            region: i % 3 === 0 ? "us-east-1" : i % 3 === 1 ? "us-west-1" : "eu-central-1",
+            status: i % 2 === 0 ? "running" : "stopped",
+            launchDate: `2025-${String((i % 12) + 1).padStart(2, "0")}-${String((i % 28) + 1).padStart(2, "0")}`
+        }));
+
+        function renderTable(data) {
+            tableBody.innerHTML = "";
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedData = data.slice(start, end);
+
+            paginatedData.forEach(item => {
+                const row = `
+                    <tr>
+                        <td><a href="/instance-metrics?id=${item.id}" target="_blank">${item.id}</a></td>
+                        <td>${item.name}</td>
+                        <td>${item.type}</td>
+                        <td>${item.region}</td>
+                        <td class="${item.status === "running" ? "status-running" : "status-stopped"}">${item.status}</td>
+                        <td>${item.launchDate}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+
+            prevPageBtn.classList.toggle("disabled", currentPage === 1);
+            nextPageBtn.classList.toggle("disabled", end >= data.length);
+            currentPageSpan.textContent = `Page ${currentPage}`;
+        }
+
+        function applyFilters() {
+            const regionValue = regionFilter.value.toLowerCase();
+            const statusValue = statusFilter.value.toLowerCase();
+
+            const filteredData = inventoryData.filter(item => {
+                const matchesRegion = regionValue === "all" || item.region === regionValue;
+                const matchesStatus = statusValue === "all" || item.status === statusValue;
+                return matchesRegion && matchesStatus;
+            });
+
+            renderTable(filteredData);
+        }
+
+        applyFiltersBtn.addEventListener("click", applyFilters);
+
+        prevPageBtn.addEventListener("click", () => {
+            if (currentPage > 1) {
+                currentPage--;
+                applyFilters();
+            }
+        });
+
+        nextPageBtn.addEventListener("click", () => {
+            const filteredData = inventoryData.filter(item => {
+                const matchesRegion = regionFilter.value.toLowerCase() === "all" || item.region === regionFilter.value.toLowerCase();
+                const matchesStatus = statusFilter.value.toLowerCase() === "all" || item.status === statusFilter.value.toLowerCase();
+                return matchesRegion && matchesStatus;
+            });
+
+            if (currentPage * rowsPerPage < filteredData.length) {
+                currentPage++;
+                applyFilters();
+            }
+        });
+
+        exportCsvBtn.addEventListener("click", () => {
+            const rows = tableBody.querySelectorAll("tr");
+            let csvContent = "Instance ID,Instance Name,Type,Region,Status,Launch Date\n";
+
+            rows.forEach(row => {
+                const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
+                csvContent += cells.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "AWSInventory.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        signoutBtn.addEventListener("click", () => {
+            window.location.href = "/";
+        });
+
+        // Initial render
+        applyFilters();
+    </script>
+</body>
+</html>

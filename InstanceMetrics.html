@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instance Metrics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .header p {
+            margin: 5px 0 0;
+            font-size: 16px;
+        }
+        .content {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .chart-container {
+            width: 45%;
+            margin: 20px 0;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .chart-container h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Instance Metrics</h1>
+        <p>Instance ID: {{ instance_id }}</p>
+    </div>
+    <div class="content">
+        <div class="chart-container">
+            <h2>CPU Usage</h2>
+            <canvas id="cpu-chart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h2>Memory Usage</h2>
+            <canvas id="memory-chart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Metrics passed from Flask
+        const cpuUsage = parseInt("{{ cpu_usage }}") || 15; // Default CPU usage: 15%
+        const memoryUsage = parseInt("{{ memory_usage }}") || 40; // Default Memory usage: 40%
+
+        // Render CPU Usage Chart
+        const cpuCtx = document.getElementById('cpu-chart').getContext('2d');
+        new Chart(cpuCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Used CPU', 'Remaining CPU'],
+                datasets: [{
+                    data: [cpuUsage, 100 - cpuUsage],
+                    backgroundColor: ['#007bff', '#ccc'],
+                    borderWidth: 1,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                }
+            }
+        });
+
+        // Render Memory Usage Chart
+        const memoryCtx = document.getElementById('memory-chart').getContext('2d');
+        new Chart(memoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Used Memory', 'Remaining Memory'],
+                datasets: [{
+                    data: [memoryUsage, 16 - memoryUsage],
+                    backgroundColor: ['#28a745', '#ccc'],
+                    borderWidth: 1,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
